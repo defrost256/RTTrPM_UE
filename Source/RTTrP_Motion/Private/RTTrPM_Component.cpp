@@ -130,7 +130,7 @@ void URTTrPM_Component::OnPacketReceived(const FArrayReaderPtr& Data, const FIPv
 	RTTrP header(dataVec);
 	if (header.fltHeader == 0x4334 || header.fltHeader == 0x3443) //RTTrPM
 	{
-		UE_LOG(LogTemp, Log, TEXT("RTTrP_Motion: Received RTTrPM packet from %s"), *Endpoint.ToString());
+		//UE_LOG(LogTemp, Log, TEXT("RTTrP_Motion: Received RTTrPM packet from %s"), *Endpoint.ToString());
 		dataVec = header.data; // Remaining data after header
 		for(int trackableIndex = 0; trackableIndex < header.numMods; trackableIndex++) {
 			RTTrPM motionPacket;
