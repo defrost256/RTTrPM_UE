@@ -56,6 +56,9 @@ void URTTrPM_Component::ConnectRTTrP()
 					SocketBuilder.JoinedToGroup(multiGroup, locIpRaw);
 				}
 			}
+			else {
+				SocketBuilder.JoinedToGroup(multiGroup, ipv4);
+			}
 		}
 		
 		Socket = SocketBuilder.Build();
@@ -68,7 +71,10 @@ void URTTrPM_Component::ConnectRTTrP()
 		UDPReceiver->Start();
 		bInitialized = true;
 		if (bMulticast) {
-			UE_LOG(LogTemp, Log, TEXT("RTTrP_Motion: Connected to multicast group %s:%d on %s"), *MulticastIP, ListenPort, *AdapterIP);
+			TSharedRef<FInternetAddr> tmpAddr = ISocketSubsystem::Get()->CreateInternetAddr();
+			Socket->GetAddress(*tmpAddr);
+
+			UE_LOG(LogTemp, Log, TEXT("RTTrP_Motion: Connected to multicast group %s:%d on %s\n\t%s"), *MulticastIP, ListenPort, *AdapterIP, *tmpAddr->ToString(true));
 		}
 		else {
 			UE_LOG(LogTemp, Log, TEXT("RTTrP_Motion: Connected to RTTrP host on %s:%d"), *AdapterIP, ListenPort);
