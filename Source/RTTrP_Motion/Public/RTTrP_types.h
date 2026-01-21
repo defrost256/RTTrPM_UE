@@ -9,6 +9,7 @@
 
 #include "RTTrP_types.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogRTTrP, Log, All);
 
 USTRUCT(BlueprintType)
 struct FRTTrPM_LED {
