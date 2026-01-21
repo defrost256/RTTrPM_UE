@@ -1,4 +1,5 @@
 #include "RTTrP.h"
+#include "Misc/ByteSwap.h"
 
 using namespace std;
 
@@ -24,8 +25,8 @@ RTTrP::RTTrP(vector<unsigned char> data)
 	data.erase(data.begin(), data.begin() + 2);
 
 	// The header values are always in Network (Big Endian) Format
-	this->intHeader = ntohs(this->intHeader);
-	this->fltHeader = ntohs(this->fltHeader);
+	this->intHeader = BYTESWAP_ORDER16(this->intHeader);
+	this->fltHeader = BYTESWAP_ORDER16(this->fltHeader);
 	
 	copy(data.begin(), data.begin() + 2, (unsigned char*)&this->version);
 	data.erase(data.begin(), data.begin() + 2);
@@ -52,10 +53,10 @@ RTTrP::RTTrP(vector<unsigned char> data)
 	
 	if (this->intHeader == 0x4154)
 	{
-		this->version = ntohs(this->version);
-		this->pID = ntohl(this->pID);
-		this->pktSize = ntohs(this->pktSize);
-		this->context = ntohl(this->context);
+		this->version = BYTESWAP_ORDER16(this->version);
+		this->pID = BYTESWAP_ORDER32(this->pID);
+		this->pktSize = BYTESWAP_ORDER16(this->pktSize);
+		this->context = BYTESWAP_ORDER32(this->context);
 	}
 }
 

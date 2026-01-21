@@ -8,7 +8,6 @@
 #include "UObject/Interface.h"
 
 #include "RTTrP_types.h"
-#include "RTTrP_Client.h"
 #include "RTTrP_Subsystem.generated.h"
 
 UINTERFACE(BlueprintType, MinimalAPI)
@@ -21,8 +20,8 @@ class IRTTrP_ClientInterface
 	GENERATED_BODY()
 
 public:
-	UFUNCTION()
-	virtual void UpdateTrackable(const FRTTrPM_Trackable& trackable) = 0;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category= "RTTrP_Motion")
+	void UpdateTrackable(const FRTTrPM_Trackable& trackable);
 };
 
 /**
@@ -52,15 +51,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "RTTrP_Motion")
 	static void RebindRTTrPClient(TScriptInterface<IRTTrP_ClientInterface> Client, FString NewTrackableName);
 
+
+public:
+	// -- Subsystem interface
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	// -- End of Subsystem interface
 private:
 	void OnPacketReceived(const FArrayReaderPtr& Data, const FIPv4Endpoint& Endpoint);
-	void SendTrackable(const FRTTrPM_Trackable& Trackable);
+	void SendTrackable(FRTTrPM_Trackable Trackable);
 private:
 	bool bIsConnected = false;
 	FSocket* Socket;
 	FUdpSocketReceiver* UDPReceiver;
 	
-	TMap<FString, TArray<IRTTrP_ClientInterface*>> TrackableClientsMap;
-	TMap<IRTTrP_ClientInterface*, FString> LastKnownTrackableMap;
+	TMap<FString, TArray<UObject*>> TrackableClientsMap;
+	TMap<UObject*, FString> LastKnownTrackableMap;
 	TSet<FString> KnownTrackablesSet;
 };

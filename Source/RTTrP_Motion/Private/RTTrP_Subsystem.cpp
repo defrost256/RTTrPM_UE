@@ -111,27 +111,36 @@ void URTTrP_Subsystem::StopListeningForRTTrPM()
 void URTTrP_Subsystem::BindRTTrPClient(TScriptInterface<IRTTrP_ClientInterface> Client, FString TrackableName)
 {
 	URTTrP_Subsystem* Self = GEngine->GetEngineSubsystem<URTTrP_Subsystem>();
+	UObject* clientInterface = Client.GetObject();
+	if (clientInterface == nullptr) {
+		return;
+	}
 
-	if(Self->LastKnownTrackableMap.Contains(Client.GetInterface())) {
+	if (Self->LastKnownTrackableMap.Contains(clientInterface)) {
 		UnbindRTTrPClient(Client);
 	}
-	Self->TrackableClientsMap.FindOrAdd(TrackableName).Add(Client.GetInterface());
-	Self->LastKnownTrackableMap.Add(Client.GetInterface(), TrackableName);
+	Self->LastKnownTrackableMap.Add(clientInterface, TrackableName);
+	Self->TrackableClientsMap.FindOrAdd(TrackableName).Add(clientInterface);
 }
 
 void URTTrP_Subsystem::UnbindRTTrPClient(TScriptInterface<IRTTrP_ClientInterface> Client)
 {
 	URTTrP_Subsystem* Self = GEngine->GetEngineSubsystem<URTTrP_Subsystem>();
-	FString* LastKnownTrackable = Self->LastKnownTrackableMap.Find(Client.GetInterface());
+	UObject* clientInterface = Client.GetObject();
+	if(clientInterface == nullptr) {
+		return;
+	}
+
+	FString* LastKnownTrackable = Self->LastKnownTrackableMap.Find(clientInterface);
 	if (LastKnownTrackable != nullptr) {
-		TArray<IRTTrP_ClientInterface*>* ClientList = Self->TrackableClientsMap.Find(*LastKnownTrackable);
+		TArray<UObject*>* ClientList = Self->TrackableClientsMap.Find(*LastKnownTrackable);
 		if (ClientList != nullptr) {
-			ClientList->Remove(Client.GetInterface());
+			ClientList->Remove(clientInterface);
 			if (ClientList->Num() == 0) {
 				Self->TrackableClientsMap.Remove(*LastKnownTrackable);
 			}
 		}
-		Self->LastKnownTrackableMap.Remove(Client.GetInterface());
+		Self->LastKnownTrackableMap.Remove(clientInterface);
 	}
 }
 
@@ -139,8 +148,17 @@ void URTTrP_Subsystem::RebindRTTrPClient(TScriptInterface<IRTTrP_ClientInterface
 {
 	UnbindRTTrPClient(Client);
 	URTTrP_Subsystem* Self = GEngine->GetEngineSubsystem<URTTrP_Subsystem>();
-	Self->TrackableClientsMap.FindOrAdd(NewTrackableName).Add(Client.GetInterface());
-	Self->LastKnownTrackableMap.Add(Client.GetInterface(), NewTrackableName);
+	UObject* clientInterface = Client.GetObject();
+	Self->TrackableClientsMap.FindOrAdd(NewTrackableName).Add(clientInterface);
+	Self->LastKnownTrackableMap.Add(clientInterface, NewTrackableName);
+}
+
+void URTTrP_Subsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	URTTrP_Settings* Settings = GetMutableDefault<URTTrP_Settings>();
+	if (Settings->bAutoconnect) {
+		ListenForRTTrPM();
+	}
 }
 
 void URTTrP_Subsystem::OnPacketReceived(const FArrayReaderPtr& Data, const FIPv4Endpoint& Endpoint) {
@@ -190,6 +208,19 @@ void URTTrP_Subsystem::OnPacketReceived(const FArrayReaderPtr& Data, const FIPv4
 					motionPacket.lavMod->push_back(lavModule);
 					break;
 				}
+				case 0x22: // Zone module
+				{
+					/*ZoneMod* zoneMod = new ZoneMod(&dataVec, header.intHeader, header.fltHeader);
+					if (motionPacket.zoneSubMod == nullptr && zoneMod->numofZoneSubModules > 0) {
+						motionPacket.zoneSubMod = new std::vector<ZoneSubMod*>();
+						for (int zoneModeIdx = 0; zoneModeIdx < zoneMod->numofZoneSubModules; zoneModeIdx++) {
+							ZoneSubMod* subMod = new ZoneSubMod(&dataVec, header.intHeader);
+							motionPacket.zoneSubMod->push_back(subMod);
+						}
+					}
+					motionPacket.zoneMod = zoneMod;*/
+					break;
+				}
 				default:
 					UE_LOG(LogTemp, Warning, TEXT("RTTrP_Motion: Unknown module type: 0x%02X"), pkType);
 					return;
@@ -204,10 +235,13 @@ void URTTrP_Subsystem::OnPacketReceived(const FArrayReaderPtr& Data, const FIPv4
 	}
 }
 
-void URTTrP_Subsystem::SendTrackable(const FRTTrPM_Trackable& trackable)
+void URTTrP_Subsystem::SendTrackable(FRTTrPM_Trackable trackable)
 {
-	TArray<IRTTrP_ClientInterface*>* clients = TrackableClientsMap.Find(trackable.Name);
-	for(IRTTrP_ClientInterface* client : *clients) {
-		client->UpdateTrackable(trackable);
+	TArray<UObject*>* clients = TrackableClientsMap.Find(trackable.Name);
+	if(clients == nullptr) {
+		return;
+	}
+	for (UObject* client : *clients) {
+		IRTTrP_ClientInterface::Execute_UpdateTrackable(client, trackable);
 	}
 }

@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Misc/ByteSwap.h"
+
 using namespace std;
 
 LightingOutput::LightingOutput()
@@ -28,10 +30,10 @@ LightingOutput::LightingOutput(vector<unsigned char> *data, uint16_t intSig, uin
 
 	if (this->intSig == 0x4154)
 	{
-		this->size = ntohs(this->size);
-		this->lightSeuquence = ntohl(this->lightSeuquence);
-		this->holdTime = ntohl(this->holdTime);
-		this->numUniverses = ntohs(this->numUniverses);
+		this->size = BYTESWAP_ORDER16(this->size);
+		this->lightSeuquence = BYTESWAP_ORDER32(this->lightSeuquence);
+		this->holdTime = BYTESWAP_ORDER32(this->holdTime);
+		this->numUniverses = BYTESWAP_ORDER16(this->numUniverses);
 	}
 
 }
@@ -75,11 +77,11 @@ LightingSync::LightingSync(vector<unsigned char> *data, uint16_t intSig, uint16_
 
 	if (this->intSig == 0x4154)
 	{
-		this->size = ntohs(this->size);
-		this->deviceID = ntohl(this->deviceID);
-		this->deviceSubID0 = ntohl(this->deviceSubID0);
-		this->deviceSubID1 = ntohl(this->deviceSubID1);
-		this->seqNum = ntohl(this->seqNum);
+		this->size = BYTESWAP_ORDER16(this->size);
+		this->deviceID = BYTESWAP_ORDER32(this->deviceID);
+		this->deviceSubID0 = BYTESWAP_ORDER32(this->deviceSubID0);
+		this->deviceSubID1 = BYTESWAP_ORDER32(this->deviceSubID1);
+		this->seqNum = BYTESWAP_ORDER32(this->seqNum);
 	}
 }
 
@@ -117,9 +119,9 @@ Universe::Universe(vector<unsigned char> *data, uint16_t intSig, uint16_t fltSig
 
 	if (this->intSig == 0x4154)
 	{
-		this->size = ntohs(this->size);
-		this->universeID = ntohs(this->universeID);
-		this->numSpots = ntohs(this->numSpots);
+		this->size = BYTESWAP_ORDER16(this->size);
+		this->universeID = BYTESWAP_ORDER16(this->universeID);
+		this->numSpots = BYTESWAP_ORDER16(this->numSpots);
 	}
 }
 
@@ -158,10 +160,10 @@ Spot::Spot(vector<unsigned char> *data, uint16_t intSig, uint16_t fltSig) : Pack
 
 	if (this->intSig == 0x4154)
 	{
-		this->size = ntohs(this->size);
-		this->spotID = ntohs(this->spotID);
-		this->spotOffset = ntohs(this->spotOffset);
-		this->channelStruct = ntohs(this->channelStruct);
+		this->size = BYTESWAP_ORDER16(this->size);
+		this->spotID = BYTESWAP_ORDER16(this->spotID);
+		this->spotOffset = BYTESWAP_ORDER16(this->spotOffset);
+		this->channelStruct = BYTESWAP_ORDER16(this->channelStruct);
 	}
 
 	if (this->chanBlocks == NULL)
@@ -203,8 +205,8 @@ ChannelBlock::ChannelBlock(vector<unsigned char> *data, uint16_t intSig, uint16_
 
 	if (this->intSig == 0x4154)
 	{
-		this->chanOffset = ntohs(this->chanOffset);
-		this->xFade = ntohs(this->xFade);
+		this->chanOffset = BYTESWAP_ORDER16(this->chanOffset);
+		this->xFade = BYTESWAP_ORDER16(this->xFade);
 	}
 }
 

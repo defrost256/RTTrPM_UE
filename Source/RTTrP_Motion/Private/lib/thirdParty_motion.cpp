@@ -1,6 +1,7 @@
 #include "thirdParty_motion.h"
 
-#pragma comment(lib, "Ws2_32.lib")
+//#pragma comment(lib, "Ws2_32.lib")
+#include "Misc/ByteSwap.h"
 
 using namespace std;
 
@@ -97,8 +98,8 @@ Trackable::Trackable(vector<unsigned char> *data, uint16_t intSig, uint16_t fltS
 	// Convert data from Big Endian format to local host endianness
 	if (this->intSig == 0x4154)
 	{
-		this->size = ntohs(this->size);
-		this->timeStamp = ntohl(this->timeStamp);
+		this->size = BYTESWAP_ORDER16(this->size);
+		this->timeStamp = BYTESWAP_ORDER32(this->timeStamp);
 	}
 }
 
@@ -172,8 +173,8 @@ CentroidMod::CentroidMod(vector<unsigned char> *data, uint16_t intSig, uint16_t 
 
 	if (this->intSig == 0x4154)
 	{
-		this->size = ntohs(this->size);
-		this->latency = ntohs(this->latency);
+		this->size = BYTESWAP_ORDER16(this->size);
+		this->latency = BYTESWAP_ORDER16(this->latency);
 	}
 }
 
@@ -247,8 +248,8 @@ LEDModule::LEDModule(vector<unsigned char> *data, uint16_t intSig, uint16_t fltS
 
 	if (this->intSig == 0x4154)
 	{
-		this->size = ntohs(this->size);
-		this->latency = ntohs(this->latency);
+		this->size = BYTESWAP_ORDER16(this->size);
+		this->latency = BYTESWAP_ORDER16(this->latency);
 	}
 }
 
@@ -327,8 +328,8 @@ QuatModule::QuatModule(vector<unsigned char> *data, uint16_t intSig, uint16_t fl
 	
 	if (this->intSig == 0x4154)
 	{
-		this->size = ntohs(this->size);
-		this->latency = ntohs(this->latency);
+		this->size = BYTESWAP_ORDER16(this->size);
+		this->latency = BYTESWAP_ORDER16(this->latency);
 	}
 }
 
@@ -410,9 +411,9 @@ EulerModule::EulerModule(vector<unsigned char> *data, uint16_t intSig, uint16_t 
 
 	if (this->intSig == 0x4154)
 	{
-		this->size = ntohs(this->size);
-		this->latency = ntohs(this->latency);
-		this->order = ntohs(this->order);
+		this->size = BYTESWAP_ORDER16(this->size);
+		this->latency = BYTESWAP_ORDER16(this->latency);
+		this->order = BYTESWAP_ORDER16(this->order);
 	}
 }
 
@@ -526,7 +527,7 @@ CentroidAccVelMod::CentroidAccVelMod(vector<unsigned char> *data, uint16_t intSi
 
 	if (this->intSig == 0x4154)
 	{
-		this->size = ntohs(this->size);
+		this->size = BYTESWAP_ORDER16(this->size);
 	}
 }
 
@@ -654,7 +655,7 @@ LEDAccVelMod::LEDAccVelMod(vector<unsigned char> *data, uint16_t intSig, uint16_
 
 	if (this->intSig == 0x4154)
 	{
-		this->size = ntohs(this->size);
+		this->size = BYTESWAP_ORDER16(this->size);
 	}
 }
 
@@ -701,7 +702,7 @@ ZoneMod::ZoneMod()
 
 }
 
-ZoneMod::ZoneMod(std::vector<unsigned char> *data, uint16_t intSig, uint16_t fltSig)
+ZoneMod::ZoneMod(std::vector<unsigned char>* data, uint16_t intSig, uint16_t fltSig) : Packet(intSig, fltSig, data)
 {
     copy(data->begin(), data->begin() + 2, (unsigned char *)&this->size);
     data->erase(data->begin(), data->begin() + 2);
@@ -710,8 +711,8 @@ ZoneMod::ZoneMod(std::vector<unsigned char> *data, uint16_t intSig, uint16_t flt
    
     if (this->intSig == 0x4154)
     {
-        this->size = ntohs(this->size);
-        this->numofZoneSubModules = ntohs(this->numofZoneSubModules);
+        this->size = BYTESWAP_ORDER16(this->size);
+		this->numofZoneSubModules = this->numofZoneSubModules;
     }
 }
 
@@ -755,7 +756,7 @@ ZoneSubMod::ZoneSubMod()
 
 }
 
-ZoneSubMod::ZoneSubMod(std::vector<unsigned char> *data, uint16_t intSig)
+ZoneSubMod::ZoneSubMod(std::vector<unsigned char>* data, uint16_t intSig)
 {
     copy(data->begin(), data->begin() + 2, (unsigned char *)&this->size);
     data->erase(data->begin(), data->begin() + 2);
@@ -763,8 +764,8 @@ ZoneSubMod::ZoneSubMod(std::vector<unsigned char> *data, uint16_t intSig)
     data->erase(data->begin(), data->begin() + 1);
     if (this->intSig == 0x4154)
     {
-        this->size = ntohs(this->size);
-        this->zoneNameLength = ntohs(this->zoneNameLength);
+        this->size = this->size;
+        this->zoneNameLength = this->zoneNameLength;
     }
     copy(data->begin(), data->begin() + this->zoneNameLength, (unsigned char*)&this->zoneName);
     data->erase(data->begin(), data->begin() + this->zoneNameLength);

@@ -26,9 +26,9 @@ void FRTTrP_MotionModule::StartupModule()
         = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
     {
         const ISettingsSectionPtr SettingsSection
-            = SettingsModule->RegisterSettings("Project", "Plugins", "QuicMessaging",
-                LOCTEXT("QuicMessagingSettingsName", "QUIC Messaging"),
-                LOCTEXT("QuicMessagingSettingsDescription", "Configure the QUIC Messaging plugin."),
+            = SettingsModule->RegisterSettings("Project", "Plugins", "RTTrP_Motion",
+                LOCTEXT("RTTrP_MessagingSettingsName", "RTTrP Messaging"),
+                LOCTEXT("RTTrP_MessagingSettingsDescription", "Configure the RTTrP Messaging plugin."),
                 GetMutableDefault<URTTrP_Settings>()
             );
 
