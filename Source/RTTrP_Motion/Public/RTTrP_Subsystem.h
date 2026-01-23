@@ -31,10 +31,6 @@ UCLASS(BlueprintType)
 class RTTRP_MOTION_API URTTrP_Subsystem : public UEngineSubsystem
 {
 	GENERATED_BODY()
-public:
-
-	UPROPERTY(BlueprintAssignable, Category = "RTTrP_Motion")
-	FOnRTTrPTrackableReceived OnRTTrPTrackableReceived;
 
 public:
 

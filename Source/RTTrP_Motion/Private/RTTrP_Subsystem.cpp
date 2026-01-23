@@ -210,7 +210,7 @@ void URTTrP_Subsystem::OnPacketReceived(const FArrayReaderPtr& Data, const FIPv4
 				}
 				case 0x22: // Zone module
 				{
-					/*ZoneMod* zoneMod = new ZoneMod(&dataVec, header.intHeader, header.fltHeader);
+					ZoneMod* zoneMod = new ZoneMod(&dataVec, header.intHeader, header.fltHeader);
 					if (motionPacket.zoneSubMod == nullptr && zoneMod->numofZoneSubModules > 0) {
 						motionPacket.zoneSubMod = new std::vector<ZoneSubMod*>();
 						for (int zoneModeIdx = 0; zoneModeIdx < zoneMod->numofZoneSubModules; zoneModeIdx++) {
@@ -218,7 +218,7 @@ void URTTrP_Subsystem::OnPacketReceived(const FArrayReaderPtr& Data, const FIPv4
 							motionPacket.zoneSubMod->push_back(subMod);
 						}
 					}
-					motionPacket.zoneMod = zoneMod;*/
+					motionPacket.zoneMod = zoneMod;
 					break;
 				}
 				default:
@@ -231,17 +231,18 @@ void URTTrP_Subsystem::OnPacketReceived(const FArrayReaderPtr& Data, const FIPv4
 			KnownTrackablesSet.Add(trackable.Name);
 			Trackables.Add(trackable);
 		}
-		OnRTTrPTrackableReceived.Broadcast(Trackables);
 	}
 }
 
 void URTTrP_Subsystem::SendTrackable(FRTTrPM_Trackable trackable)
 {
-	TArray<UObject*>* clients = TrackableClientsMap.Find(trackable.Name);
-	if(clients == nullptr) {
+	TArray<UObject*>* clients = this->TrackableClientsMap.Find(trackable.Name);
+	if (clients == nullptr) {
 		return;
 	}
 	for (UObject* client : *clients) {
-		IRTTrP_ClientInterface::Execute_UpdateTrackable(client, trackable);
+		if (IsValid(client) && !client->IsUnreachable()/* && client->Implements<URTTrP_ClientInterface>()*/) {
+			IRTTrP_ClientInterface::Execute_UpdateTrackable(client, trackable);
+		}
 	}
 }

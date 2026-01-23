@@ -60,6 +60,8 @@ struct FRTTrPM_Trackable
 	FVector Acceleration;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RTTrP_Motion")
 	TArray<FRTTrPM_LED> LEDs;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RTTrP_Motion")
+	TArray<FString> ActiveZones;
 
 public:
 	FRTTrPM_Trackable()
@@ -78,6 +80,9 @@ public:
 		Acceleration = Other.Acceleration;
 		for (const FRTTrPM_LED& led : Other.LEDs) {
 			LEDs.Add(FRTTrPM_LED(led));
+		}
+		for (const FString& zone : Other.ActiveZones) {
+			ActiveZones.Add(zone);
 		}
 	}
 
@@ -117,8 +122,13 @@ public:
 				FMath::RadiansToDegrees(motionPacket.eulerMod->R3));
 			Transform.SetRotation(FQuat(Rotator));
 		}
-
+		if(motionPacket.zoneMod != nullptr) {
+			for (int i = 0; i < motionPacket.zoneMod->numofZoneSubModules; i++) {
+				FString ZoneName = (motionPacket.zoneSubMod->at(i))->zoneName.c_str();
+				ActiveZones.Add(ZoneName);
+			}
+		}
 	}
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRTTrPTrackableReceived, const TArray<FRTTrPM_Trackable>&, Trackables);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRTTrPTrackableReceived, const FRTTrPM_Trackable&, trackable);

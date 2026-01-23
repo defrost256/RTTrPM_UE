@@ -758,8 +758,8 @@ ZoneSubMod::ZoneSubMod()
 
 ZoneSubMod::ZoneSubMod(std::vector<unsigned char>* data, uint16_t intSig)
 {
-    copy(data->begin(), data->begin() + 2, (unsigned char *)&this->size);
-    data->erase(data->begin(), data->begin() + 2);
+    copy(data->begin(), data->begin() + 1, (unsigned char *)&this->size);
+    data->erase(data->begin(), data->begin() + 1);
     copy(data->begin(), data->begin() + 1, (unsigned char*)&this->zoneNameLength);
     data->erase(data->begin(), data->begin() + 1);
     if (this->intSig == 0x4154)
