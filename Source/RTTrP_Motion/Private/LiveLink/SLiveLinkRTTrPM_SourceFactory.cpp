@@ -1,63 +1,61 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SLiveLinkRTTrPM_SourceFactory.h"
+#include "LiveLinkRTTrPM_Connection.h"
+
+#include "Widgets/Input/SButton.h"
+#include "Widgets/SBoxPanel.h"
 
 #if WITH_EDITOR
-#include "DetailsViewArgs.h"
-#include "Widgets/Input/SButton.h"
-#include "IStructureDetailsView.h"
-#include "Widgets/SBoxPanel.h"
-#include "Modules/ModuleManager.h"
-#include "PropertyEditorModule.h"
-#include "UObject/StructOnScope.h"
+#include "DetailLayoutBuilder.h"
 #endif //WITH_EDITOR
 
-#define LOCTEXT_NAMESPACE "SLiveLinkRTTrPM_SourceFactory"
+#define LOCTEXT_NAMESPACE "SLiveLinkRTTrPMSourceFactory"
 
-void SLiveLinkRTTrPM_SourceFactory::Construct(const FArguments& Args)
+void SLiveLinkRTTrPMSourceFactory::Construct(const FArguments& Args)
 {
 #if WITH_EDITOR
-	OnConnectionSettingsAccepted = Args._OnConnectionSettingsAccepted;
+    OnConnectionSettingsAccepted = Args._OnConnectionSettingsAccepted;
 
-	FStructureDetailsViewArgs StructureViewArgs;
-	FDetailsViewArgs DetailArgs;
-	DetailArgs.bAllowSearch = false;
-	DetailArgs.bShowScrollBar = false;
+    FStructureDetailsViewArgs StructureViewArgs;
+    FDetailsViewArgs DetailArgs;
+    DetailArgs.bAllowSearch = false;
+    DetailArgs.bShowScrollBar = false;
 
-	FPropertyEditorModule& PropertyEditor = FModuleManager::Get().LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
+    FPropertyEditorModule& PropertyEditor = FModuleManager::Get().LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
 
-	StructOnScope = MakeShared<FStructOnScope>(FLiveLinkRTTrPM_ConnectionSettings::StaticStruct());
-	CastChecked<UScriptStruct>(StructOnScope->GetStruct())->CopyScriptStruct(StructOnScope->GetStructMemory(), &ConnectionSettings);
-	StructureDetailsView = PropertyEditor.CreateStructureDetailView(DetailArgs, StructureViewArgs, StructOnScope);
+    StructOnScope = MakeShared<FStructOnScope>(FLiveLinkRTTrPM_ConnectionSettings::StaticStruct());
+    CastChecked<UScriptStruct>(StructOnScope->GetStruct())->CopyScriptStruct(StructOnScope->GetStructMemory(), &ConnectionSettings);
+    StructureDetailsView = PropertyEditor.CreateStructureDetailView(DetailArgs, StructureViewArgs, StructOnScope);
 
-	ChildSlot
-	[
-		SNew(SVerticalBox)
-		+SVerticalBox::Slot()
-		.FillHeight(1.f)
-		[
-			StructureDetailsView->GetWidget().ToSharedRef()
-		]
-		+ SVerticalBox::Slot()
-		.HAlign(HAlign_Right)
-		.AutoHeight()
-		[
-			SNew(SButton)
-			.OnClicked(this, &SLiveLinkRTTrPM_SourceFactory::OnSettingsAccepted)
-			.Text(LOCTEXT("AddSource", "Add"))
-		]
-	];
+    ChildSlot
+    [
+        SNew(SVerticalBox)
+        +SVerticalBox::Slot()
+        .FillHeight(1.f)
+        [
+            StructureDetailsView->GetWidget().ToSharedRef()
+        ]
+        + SVerticalBox::Slot()
+        .HAlign(HAlign_Right)
+        .AutoHeight()
+        [
+            SNew(SButton)
+            .OnClicked(this, &SLiveLinkRTTrPMSourceFactory::OnSettingsAccepted)
+            .Text(LOCTEXT("AddSource", "Add"))
+        ]
+    ];
 #endif //WITH_EDITOR
 }
 
-FReply SLiveLinkRTTrPM_SourceFactory::OnSettingsAccepted()
+FReply SLiveLinkRTTrPMSourceFactory::OnSettingsAccepted()
 {
 #if WITH_EDITOR
-	CastChecked<UScriptStruct>(StructOnScope->GetStruct())->CopyScriptStruct(&ConnectionSettings, StructOnScope->GetStructMemory());
-	OnConnectionSettingsAccepted.ExecuteIfBound(ConnectionSettings);
+    CastChecked<UScriptStruct>(StructOnScope->GetStruct())->CopyScriptStruct(&ConnectionSettings, StructOnScope->GetStructMemory());
+    OnConnectionSettingsAccepted.ExecuteIfBound(ConnectionSettings);
 #endif //WITH_EDITOR
 
-	return FReply::Handled();
+    return FReply::Handled();
 }
 
 #undef LOCTEXT_NAMESPACE

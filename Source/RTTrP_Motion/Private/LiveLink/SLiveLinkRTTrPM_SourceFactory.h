@@ -1,39 +1,38 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
-#include "LiveLinkRTTrPM_ConnectionSettings.h"
+#include "LiveLinkRTTrPM_Connection.h"
 #include "Widgets/SCompoundWidget.h"
-
-class FStructOnScope;
-class IStructureDetailsView;
+#include "Widgets/DeclarativeSyntaxSupport.h"
 
 #if WITH_EDITOR
+#include "IStructureDetailsView.h"
 #endif //WITH_EDITOR
 
+#include "Input/Reply.h"
 
 struct FLiveLinkRTTrPM_ConnectionSettings;
 
-DECLARE_DELEGATE_OneParam(FOnLiveLinkRTTrPM_ConnectionSettingsAccepted, FLiveLinkRTTrPM_ConnectionSettings);
+DECLARE_DELEGATE_OneParam(FOnLiveLinkRTTrPMConnectionSettingsAccepted, FLiveLinkRTTrPM_ConnectionSettings);
 
-class SLiveLinkRTTrPM_SourceFactory : public SCompoundWidget
+class SLiveLinkRTTrPMSourceFactory : public SCompoundWidget
 {
-	SLATE_BEGIN_ARGS(SLiveLinkRTTrPM_SourceFactory)
-	{}
-		SLATE_EVENT(FOnLiveLinkRTTrPM_ConnectionSettingsAccepted, OnConnectionSettingsAccepted)
-	SLATE_END_ARGS()
+    SLATE_BEGIN_ARGS(SLiveLinkRTTrPMSourceFactory)
+    {}
+        SLATE_EVENT(FOnLiveLinkRTTrPMConnectionSettingsAccepted, OnConnectionSettingsAccepted)
+    SLATE_END_ARGS()
 
-	void Construct(const FArguments& Args);
-
+    void Construct(const FArguments& Args);
 
 private:
-	FLiveLinkRTTrPM_ConnectionSettings ConnectionSettings;
+    FLiveLinkRTTrPM_ConnectionSettings ConnectionSettings;
 
 #if WITH_EDITOR
-	TSharedPtr<FStructOnScope> StructOnScope;
-	TSharedPtr<IStructureDetailsView> StructureDetailsView;
+    TSharedPtr<FStructOnScope> StructOnScope;
+    TSharedPtr<IStructureDetailsView> StructureDetailsView;
 #endif //WITH_EDITOR
 
-	FReply OnSettingsAccepted();
-	FOnLiveLinkRTTrPM_ConnectionSettingsAccepted OnConnectionSettingsAccepted;
+    FReply OnSettingsAccepted();
+    FOnLiveLinkRTTrPMConnectionSettingsAccepted OnConnectionSettingsAccepted;
 };

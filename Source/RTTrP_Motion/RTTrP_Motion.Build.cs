@@ -27,7 +27,8 @@ public class RTTrP_Motion : ModuleRules
 			{
 				"Core",
 				"Networking",
-				"Sockets"
+				"Sockets",
+                "LiveLinkInterface"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
