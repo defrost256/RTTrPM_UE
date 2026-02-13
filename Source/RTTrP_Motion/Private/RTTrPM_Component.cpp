@@ -81,6 +81,18 @@ void URTTrPM_Component::UpdateTrackable_Implementation(const FRTTrPM_Trackable& 
 	// Otherwise (playing in editor and not allowed to update), do nothing.
 }
 
+FTransform URTTrPM_Component::GetTrackableTransform()
+{
+	
+	return CurrentTrackable.Transform;
+}
+
+void URTTrPM_Component::RebindRTTrP()
+{
+	URTTrP_Subsystem* RTTP_Subsystem = GEngine->GetEngineSubsystem<URTTrP_Subsystem>();
+	RTTP_Subsystem->RebindRTTrPClient(TScriptInterface<IRTTrP_ClientInterface>(this), TrackableName);
+}
+
 
 // Called when the game starts
 void URTTrPM_Component::BeginPlay()
@@ -108,8 +120,8 @@ void URTTrPM_Component::UpdateState()
 		return;
 	}
 	owner->GetRootComponent()->SetRelativeLocation(CurrentTrackable.Transform.GetLocation());
-	if(OnTrackableUpdated.IsBound()) {
+	/*if (OnTrackableUpdated.IsBound()) {
 		OnTrackableUpdated.Broadcast(CurrentTrackable);
-	}
+	}*/
 }
 

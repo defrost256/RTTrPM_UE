@@ -29,12 +29,19 @@ public:
 	// Sets default values for this component's properties
 	URTTrPM_Component();
 	~URTTrPM_Component();
+
 	virtual void OnComponentCreated() override;
 	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 
 	// IRTTrP_ClientInterface implementation
 	virtual void UpdateTrackable_Implementation(const FRTTrPM_Trackable& trackable) override;
+
+	UFUNCTION(BlueprintCallable, Category = "RTTrP_Motion")
+	FTransform GetTrackableTransform();
+	UFUNCTION(BlueprintCallable, CallInEditor, Category = "RTTrP_Motion", meta = (DisplayName = "Rebind RTTrP"))
+	void RebindRTTrP();
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

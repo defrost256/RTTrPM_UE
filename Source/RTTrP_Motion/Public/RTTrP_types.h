@@ -81,7 +81,7 @@ public:
 		for (const FRTTrPM_LED& led : Other.LEDs) {
 			LEDs.Add(FRTTrPM_LED(led));
 		}
-		for (const FString& zone : Other.ActiveZones) {
+		for (FString zone : Other.ActiveZones) {
 			ActiveZones.Add(zone);
 		}
 	}
@@ -91,7 +91,7 @@ public:
 		if (motionPacket.centroidMod != nullptr) {
 			Transform.SetLocation(FVector(
 				motionPacket.centroidMod->x * 100.0,
-				motionPacket.centroidMod->y * 100.0,
+				motionPacket.centroidMod->y * -100.0,
 				motionPacket.centroidMod->z * 100.0));
 		}
 		if (motionPacket.quatMod != nullptr) {
@@ -104,15 +104,15 @@ public:
 		if (motionPacket.cavMod != nullptr) {
 			Transform.SetLocation(FVector(
 				motionPacket.cavMod->x * 100.0,
-				motionPacket.cavMod->y * 100.0,
+				motionPacket.cavMod->y * -100.0,
 				motionPacket.cavMod->z * 100.0));
 			Velocity = FVector(
 				motionPacket.cavMod->velx * 100.0,
-				motionPacket.cavMod->vely * 100.0,
+				motionPacket.cavMod->vely * -100.0,
 				motionPacket.cavMod->velz * 100.0);
 			Acceleration = FVector(
 				motionPacket.cavMod->accx * 100.0,
-				motionPacket.cavMod->accy * 100.0,
+				motionPacket.cavMod->accy * -100.0,
 				motionPacket.cavMod->accz * 100.0);
 		}
 		if (motionPacket.eulerMod != nullptr) {
@@ -124,11 +124,21 @@ public:
 		}
 		if(motionPacket.zoneMod != nullptr) {
 			for (int i = 0; i < motionPacket.zoneMod->numofZoneSubModules; i++) {
-				FString ZoneName = (motionPacket.zoneSubMod->at(i))->zoneName.c_str();
+				ZoneSubMod* subMod = motionPacket.zoneSubMod->at(i);
+				if (subMod == nullptr) {
+					UE_LOG(LogRTTrP, Warning, TEXT("Malformed submod"));
+					continue;
+				}
+				const char* zoneName_c = subMod->zoneName.c_str();
+				if (zoneName_c == nullptr)
+					UE_LOG(LogRTTrP, Warning, TEXT("Malformed zone name"));
+					continue;
+				FString ZoneName = FString(zoneName_c);
+				//UE_LOG(LogRTTrP, Log, TEXT("%s Entered zone %s"), *Name, *ZoneName);
 				ActiveZones.Add(ZoneName);
 			}
 		}
 	}
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRTTrPTrackableReceived, const FRTTrPM_Trackable&, trackable);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRTTrPTrackableReceived, FRTTrPM_Trackable, trackable);

@@ -10,25 +10,27 @@
 /**
  * 
  */
-UCLASS(config=Engine)
-class RTTRP_MOTION_API URTTrP_Settings : public UObject
+UCLASS(Config=Engine, DefaultConfig)
+class RTTRP_MOTION_API URTTrP_Settings : public UDeveloperSettings
 {
 	GENERATED_BODY()
 public:
-		UPROPERTY(config, EditAnywhere, Category = "RTTrP_Motion")
+		UPROPERTY(Config, EditAnywhere, Category = "RTTrP_Motion")
 	bool bAutoconnect = true;
 
-	UPROPERTY(config, EditAnywhere, Category = "RTTrP_Motion")
+	UPROPERTY(Config, EditAnywhere, Category = "RTTrP_Motion")
 	FString AdapterIP = "192.168.88.100";
 
-	UPROPERTY(config, EditAnywhere, Category = "RTTrP_Motion")
+	UPROPERTY(Config, EditAnywhere, Category = "RTTrP_Motion")
 	int32 ListenPort = 24002;
 
-	UPROPERTY(config, EditAnywhere, Category = "RTTrP_Motion")
+	UPROPERTY(Config, EditAnywhere, Category = "RTTrP_Motion")
 	bool bMulticast = true;
 
-	UPROPERTY(config, EditAnywhere, Category = "RTTrP_Motion")
+	UPROPERTY(Config, EditAnywhere, Category = "RTTrP_Motion")
 	FString MulticastIP = "238.210.10.1";
+
+
 
 		
 };

@@ -12,10 +12,13 @@ bool URTTrP_Subsystem::IsConnected()
 	return Self->bIsConnected;
 }
 
-bool URTTrP_Subsystem::ListenForRTTrPM()
+bool URTTrP_Subsystem::ListenForRTTrPM(const URTTrP_Settings* settings_in = nullptr)
 {
 	URTTrP_Subsystem* Self = GEngine->GetEngineSubsystem<URTTrP_Subsystem>();
-	URTTrP_Settings* Settings = GetMutableDefault<URTTrP_Settings>();
+	const URTTrP_Settings* Settings = GetMutableDefault<URTTrP_Settings>();
+	if (settings_in != nullptr) {
+		Settings = settings_in;
+	}
 	if (!Self->bIsConnected) {
 		FIPv4Address ipv4;
 		if (!FIPv4Address::Parse(Settings->AdapterIP, ipv4)) {
@@ -34,6 +37,7 @@ bool URTTrP_Subsystem::ListenForRTTrPM()
 			SocketBuilder.WithMulticastTtl(8).WithMulticastLoopback().WithMulticastInterface(ipv4);
 			if (ipv4 == FIPv4Address::Any)
 			{
+				UE_LOG(LogRTTrP, Log, TEXT("Found Any catchall IP, joining multicast group on all local addresses"));
 				TArray<TSharedPtr<FInternetAddr>> LocapIps;
 				ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetLocalAdapterAddresses(LocapIps);
 				for (const TSharedPtr<FInternetAddr>& LocalIp : LocapIps)
@@ -41,12 +45,13 @@ bool URTTrP_Subsystem::ListenForRTTrPM()
 					uint32 locIpRaw = 0;
 					LocalIp->GetIp(locIpRaw);
 					SocketBuilder.JoinedToGroup(multiGroup, FIPv4Address(locIpRaw));
-
+					UE_LOG(LogRTTrP, Log, TEXT("Joining %s on local ip %s"), *Settings->MulticastIP, *LocalIp->ToString(true));
 				}
 
 				// GetLocalAdapterAddresses returns empty list when all network adapters are offline
 				if (LocapIps.Num() == 0)
 				{
+					UE_LOG(LogRTTrP, Log, TEXT("No valid local ips found, joining multicast group on localhost"));
 					bool bCanBindAll = false;
 					uint32 locIpRaw = 0;
 					ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetLocalHostAddr(*GLog, bCanBindAll)->GetIp(locIpRaw);

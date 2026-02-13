@@ -7,6 +7,7 @@
 #include "Common/UDPSocketReceiver.h"
 #include "UObject/Interface.h"
 
+#include "RTTrP_Settings.h"
 #include "RTTrP_types.h"
 #include "RTTrP_Subsystem.generated.h"
 
@@ -37,7 +38,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "RTTrP_Motion")
 	static bool IsConnected();
 	UFUNCTION(BlueprintCallable, Category = "RTTrP_Motion")
-	static bool ListenForRTTrPM();
+	static bool ListenForRTTrPM(const URTTrP_Settings* settings_in);
 	UFUNCTION(BlueprintCallable, Category = "RTTrP_Motion")
 	static void StopListeningForRTTrPM();
 	UFUNCTION(BlueprintCallable, Category = "RTTrP_Motion")
