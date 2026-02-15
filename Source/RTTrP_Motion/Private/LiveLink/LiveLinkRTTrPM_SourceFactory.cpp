@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "LiveLinkRTTrPM_SourceFactory.h"
-#include "SLiveLinkRTTrPM_SourceFactory.h"
-#include "LiveLinkRTTrPM_Source.h"
+#include "LiveLink/LiveLinkRTTrPM_SourceFactory.h"
+#include "LiveLink/SLiveLinkRTTrPM_SourceFactory.h"
+#include "LiveLink/LiveLinkRTTrPM_Source.h"
 
 #define LOCTEXT_NAMESPACE "LiveLinkRTTrPMSourceFactory"
 

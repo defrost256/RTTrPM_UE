@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "LiveLinkRTTrPM_Source.h"
+#include "LiveLink/LiveLinkRTTrPM_Source.h"
 #include "Common/UdpSocketBuilder.h"
 #include "RTTrP_types.h"
 #include "SocketSubsystem.h"
@@ -20,6 +20,7 @@ FLiveLinkRTTrPM_Source::FLiveLinkRTTrPM_Source(const FLiveLinkRTTrPM_ConnectionS
 
     FString MachineNameString = FString::Printf(TEXT("RTTrPM@%s:%d"), *ConnectionSettings.AdapterIP, ConnectionSettings.ListenPort);
     SourceMachineName = FText::FromString(MachineNameString);
+    Start();
 }
 
 FLiveLinkRTTrPM_Source::~FLiveLinkRTTrPM_Source()
