@@ -4,9 +4,10 @@
 #include "LiveLink/LiveLinkRTTrPM_Source.h"
 #include "Common/UdpSocketBuilder.h"
 #include "RTTrP_types.h"
+#include "LiveLink/LiveLinkRTTrPM_Role.h"
 #include "SocketSubsystem.h"
 #include "Async/Async.h"
-#include "Roles/LiveLinkTransformRole.h"
+#include "LiveLink/LiveLinkRTTrPM_DataTypes.h"
 
 FLiveLinkRTTrPM_Source::FLiveLinkRTTrPM_Source(const FLiveLinkRTTrPM_ConnectionSettings& InConnectionSettings)
     : ConnectionSettings(InConnectionSettings)
@@ -58,6 +59,12 @@ FText FLiveLinkRTTrPM_Source::GetSourceMachineName() const
 FText FLiveLinkRTTrPM_Source::GetSourceStatus() const
 {
     return SourceStatus;
+}
+
+void FLiveLinkRTTrPM_Source::InitializeSettings(ULiveLinkSourceSettings* Settings)
+{
+    mSettings = Cast<ULiveLinkRTTrPM_SourceSettings>(Settings);
+    mSettings->TransformSource = ERTTrPM_SubjectType::Centroid;
 }
 
 uint32 FLiveLinkRTTrPM_Source::Run()
@@ -243,14 +250,45 @@ void FLiveLinkRTTrPM_Source::SendTrackable(const FRTTrPM_Trackable& Trackable)
 
     if (!EncounteredSubjects.Contains(SubjectName)) {
         // Transform role static data
-        FLiveLinkStaticDataStruct StaticData(FLiveLinkTransformStaticData::StaticStruct());
-        Client->PushSubjectStaticData_AnyThread({ SourceGuid, SubjectName }, ULiveLinkTransformRole::StaticClass(), MoveTemp(StaticData));
+        FLiveLinkStaticDataStruct StaticData(FLiveLinkRTTrPM_StaticData::StaticStruct());
+        Client->PushSubjectStaticData_AnyThread({ SourceGuid, SubjectName }, ULiveLinkRTTrPM_Role::StaticClass(), MoveTemp(StaticData));
         EncounteredSubjects.Add(SubjectName);
     }
 
-    FLiveLinkFrameDataStruct FrameData(FLiveLinkTransformFrameData::StaticStruct());
-    FLiveLinkTransformFrameData* TransformFrameData = FrameData.Cast<FLiveLinkTransformFrameData>();
+    FLiveLinkFrameDataStruct FrameData(FLiveLinkRTTrPM_FrameData::StaticStruct());
+    FLiveLinkRTTrPM_FrameData* TransformFrameData = FrameData.Cast<FLiveLinkRTTrPM_FrameData>();
     TransformFrameData->Transform = Trackable.Transform;
+    TransformFrameData->CentroidPosition = Trackable.Transform.GetLocation();
+    for (const FRTTrPM_LED& led : Trackable.LEDs) {
+        switch (led.Index) {
+        case 0:
+            TransformFrameData->LED1Position = led.Position;
+            break;
+        case 1:
+            TransformFrameData->LED2Position = led.Position;
+            break;
+        case 2:
+            TransformFrameData->LED3Position = led.Position;
+            break;
+        default:
+            break;
+        }
+    }
+    switch (mSettings->TransformSource) {
+    case ERTTrPM_SubjectType::Centroid:
+        break;
+    case ERTTrPM_SubjectType::LED1:
+        TransformFrameData->Transform.SetLocation(TransformFrameData->LED1Position);
+        break;
+    case ERTTrPM_SubjectType::LED2:
+        TransformFrameData->Transform.SetLocation(TransformFrameData->LED2Position);
+        break;
+    case ERTTrPM_SubjectType::LED3:
+        TransformFrameData->Transform.SetLocation(TransformFrameData->LED3Position);
+        break;
+    default:
+        break;
+    }
 
     Client->PushSubjectFrameData_AnyThread({ SourceGuid, SubjectName }, MoveTemp(FrameData));
 }

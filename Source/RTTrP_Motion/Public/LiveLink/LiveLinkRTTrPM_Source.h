@@ -28,6 +28,7 @@ public:
 	FText GetSourceType() const override;
 	FText GetSourceMachineName() const override;
 	FText GetSourceStatus() const override;
+	virtual void InitializeSettings(ULiveLinkSourceSettings* Settings) override;
 	virtual TSubclassOf<ULiveLinkSourceSettings> GetSettingsClass() const override { return ULiveLinkRTTrPM_SourceSettings::StaticClass(); }
 	// End ILiveLinkSource Interface
 
@@ -52,6 +53,7 @@ public:
 
 	// Connection settings
 	FLiveLinkRTTrPM_ConnectionSettings ConnectionSettings;
+	ULiveLinkRTTrPM_SourceSettings* mSettings;
 
 	// Track subjects we've registered
 	TSet<FName> EncounteredSubjects;
