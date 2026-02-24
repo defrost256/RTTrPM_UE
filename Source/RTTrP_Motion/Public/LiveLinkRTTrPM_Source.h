@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <atomic>
+
 #include "ILiveLinkSource.h"
 #include "ILiveLinkClient.h"
 #include "Roles/LiveLinkTransformTypes.h"
@@ -15,7 +17,16 @@
 class FUdpSocketReceiver;
 class FSocket;
 
-class RTTRP_MOTION_API FLiveLinkRTTrPM_Source : public ILiveLinkSource, public FRunnable, public TSharedFromThis<FLiveLinkRTTrPM_Source>
+enum class ELiveLinkRTTrPMState : uint8
+{
+	NotStarted = 0,
+	EndpointsReady,
+	Receiving,
+	ResetRequested,
+	ShutDown,
+};
+
+class RTTRP_MOTION_API FLiveLinkRTTrPM_Source : public ILiveLinkSource, public TSharedFromThis<FLiveLinkRTTrPM_Source>
 {
 public:
 
@@ -29,14 +40,10 @@ public:
 	FText GetSourceMachineName() const override;
 	FText GetSourceStatus() const override;
 	virtual void InitializeSettings(ULiveLinkSourceSettings* Settings) override;
+	virtual void Update() override;
 	virtual TSubclassOf<ULiveLinkSourceSettings> GetSettingsClass() const override { return ULiveLinkRTTrPM_SourceSettings::StaticClass(); }
 	// End ILiveLinkSource Interface
 
-	// Inherited via FRunnable
-
-	virtual uint32 Run() override;
-	void Start();
-	virtual void Stop() override;
 	// LiveLink client
 	ILiveLinkClient* Client = nullptr;
 	FGuid SourceGuid;
@@ -48,12 +55,16 @@ public:
 
 	// UDP receiver
 	FSocket* Socket = nullptr;
-	FUdpSocketReceiver* UDPReceiver = nullptr;
+	TUniquePtr<FUdpSocketReceiver> UDPReceiver = nullptr;
 	bool bIsConnected = false;
+	ELiveLinkRTTrPMState ConnectionState = ELiveLinkRTTrPMState::NotStarted;
+	std::atomic<double> LastDataReadTime = 0;
+	bool bShutdownRequested = false;
+	bool bResetRequested = false;
 
 	// Connection settings
 	FLiveLinkRTTrPM_ConnectionSettings ConnectionSettings;
-	ULiveLinkRTTrPM_SourceSettings* mSettings;
+	ULiveLinkRTTrPM_SourceSettings* mSettings = nullptr;
 
 	// Track subjects we've registered
 	TSet<FName> EncounteredSubjects;
@@ -61,6 +72,11 @@ public:
 	void SendTrackable(const FRTTrPM_Trackable& Trackable);
 
 private:
+	bool OpenSocket();
+	void StopUdpReceiver();
+	void CloseSocket();
+	bool JoinMulticastGroup(const FIPv4Address& UnicastAddress, const FIPv4Address& MulticastAddress);
+
 	void OnPacketReceived(const FArrayReaderPtr& Data, const FIPv4Endpoint& Endpoint);
 
 };

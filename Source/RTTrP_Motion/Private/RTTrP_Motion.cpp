@@ -7,38 +7,11 @@
     #include "ISettingsSection.h"
 #endif
 
-#include "RTTrP_Settings.h"
-
 #define LOCTEXT_NAMESPACE "FRTTrP_MotionModule"
 
 void FRTTrP_MotionModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-
-    // Hook to the PreExit callback, needed to execute UObject related shutdowns
-    FCoreDelegates::OnPreExit.AddRaw(
-        this, &FRTTrP_MotionModule::OnAppPreExit);
-
-#if WITH_EDITOR
-
-    // Register settings
-    if (ISettingsModule* SettingsModule
-        = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
-    {
-        const ISettingsSectionPtr SettingsSection
-            = SettingsModule->RegisterSettings("Project", "Plugins", "RTTrP_Motion",
-                LOCTEXT("RTTrP_MessagingSettingsName", "RTTrP Messaging"),
-                LOCTEXT("RTTrP_MessagingSettingsDescription", "Configure the RTTrP Messaging plugin."),
-                GetMutableDefault<URTTrP_Settings>()
-            );
-
-        if (SettingsSection.IsValid())
-        {
-            SettingsSection->OnModified().BindRaw(
-                this, &FRTTrP_MotionModule::OnSettingsChanged);
-        }
-    }
-#endif
 
 }
 

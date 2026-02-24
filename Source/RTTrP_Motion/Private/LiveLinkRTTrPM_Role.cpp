@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "LiveLink/LiveLinkRTTrPM_Role.h"
-#include "LiveLink/LiveLinkRTTrPM_DataTypes.h"
+#include "LiveLinkRTTrPM_Role.h"
+#include "LiveLinkRTTrPM_DataTypes.h"
 
 #define LOCTEXT_NAMESPACE "RTTrPM_LiveLink"
 

@@ -129,11 +129,11 @@ public:
 					UE_LOG(LogRTTrP, Warning, TEXT("Malformed submod"));
 					continue;
 				}
-				const char* zoneName_c = subMod->zoneName.c_str();
-				if (zoneName_c == nullptr)
+				const ANSICHAR* zoneName_c = subMod->zoneName.c_str();
+				/*if (zoneName_c == nullptr)
 					UE_LOG(LogRTTrP, Warning, TEXT("Malformed zone name"));
-					continue;
-				FString ZoneName = FString(zoneName_c);
+					continue;*/
+				FString ZoneName = FString(subMod->zoneName.data(), subMod->zoneNameLength);
 				//UE_LOG(LogRTTrP, Log, TEXT("%s Entered zone %s"), *Name, *ZoneName);
 				ActiveZones.Add(ZoneName);
 			}

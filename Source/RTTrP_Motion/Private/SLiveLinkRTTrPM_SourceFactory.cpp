@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "LiveLink/SLiveLinkRTTrPM_SourceFactory.h"
-#include "LiveLink/LiveLinkRTTrPM_Connection.h"
+#include "SLiveLinkRTTrPM_SourceFactory.h"
+#include "LiveLinkRTTrPM_Connection.h"
 
 #include "Widgets/Input/SButton.h"
 #include "Widgets/SBoxPanel.h"

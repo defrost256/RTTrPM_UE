@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "LiveLink/LiveLinkRTTrPM_Connection.h"
+#include "LiveLinkRTTrPM_Connection.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 
