@@ -3,13 +3,37 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Serialization/ArrayReader.h"
 
+#include "UdpSocketReceiver.h"
 #include "lib/thirdParty_motion.h"
 #include "lib/RTTrP.h"
 
 #include "RTTrP_types.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogRTTrP, Log, All);
+
+#define RTTrP_INT_LE 0x5441
+#define RTTrP_INT_BE 0x4154
+#define RTTrP_FLT_LE 0x3443
+#define RTTrP_FLT_BE 0x4334
+#define RTTrP_Version 0x0002
+
+enum RTTrP_PacketType: uint8_t {
+	Trackable = 0x01,
+	Centroid_Pos = 0x02,
+	Orientation_Quat = 0x03,
+	Orientation_Euler = 0x04,
+	LED_Pos = 0x06,
+	Lighting = 0x07,
+	Universe = 0x09,
+	SpotID = 0x0A,
+	Centroid_AccVel = 0x20,
+	LED_AccVel = 0x21,
+	Zone = 0x22,
+	Trackable_TS = 0x51,
+
+};
 
 USTRUCT(BlueprintType)
 struct FRTTrPM_LED {
@@ -86,6 +110,8 @@ public:
 		}
 	}
 
+	FRTTrPM_Trackable(FArrayReaderPtr data);
+
 	FRTTrPM_Trackable(const RTTrPM& motionPacket) {
 		Name = FString(motionPacket.trackable->name.c_str());
 		if (motionPacket.centroidMod != nullptr) {
@@ -140,5 +166,64 @@ public:
 		}
 	}
 };
+
+struct RTTrP_Header {
+	uint16_t intSig, fltSig, version;
+	uint32_t pID;
+	uint8_t pForm;
+	uint16_t pktSize;
+	uint32_t context;
+	uint8_t numMods;
+
+	RTTrP_Header(FArrayReader& data);
+};
+
+struct RTTrPM_Centroid {
+	uint8_t pkType;
+	uint16_t size, latency;
+	double x, y, z;
+	float accx, accy, accz;
+	float velx, vely, velz;
+
+	void Update(FArrayReader& data, uint8_t pkType, uint16_t intSig, uint16_t fltSig);
+};
+
+struct RTTrPM_LED {
+	uint8_t pkType;
+	uint16_t size, latency;
+	double x, y, z;
+	float accx, accy, accz;
+	float velx, vely, velz;
+	uint8_t index = -1;
+
+	void Update(FArrayReader& data, uint8_t pkType, uint16_t intSig, uint16_t fltSig);
+	void Update(RTTrPM_LED& other);
+};
+
+struct RTTrPM_Orientation {
+	uint8_t pkType;
+	uint16_t size, latency, eulerOrder;
+	double R1, R2, R3;
+	double Qx, Qy, Qz, Qw;
+
+	void Update(FArrayReader& data, uint8_t pkType, uint16_t intSig, uint16_t fltSig);
+};
+
+struct RTTrPM_Trackable {
+	uint8_t pkType;
+	uint16_t size;
+	uint8_t nameLen;
+	FString name;
+	uint8_t numMods;
+	uint32_t timeStamp = 0;
+	RTTrPM_Centroid centroid;
+	RTTrPM_Orientation orientation;
+	TMap<uint8_t, RTTrPM_LED> LEDs;
+	TArray<FString> zones;
+
+	RTTrPM_Trackable(FArrayReader& data, uint16_t intSig, uint16_t fltSig);
+};
+
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRTTrPTrackableReceived, FRTTrPM_Trackable, trackable);

@@ -34,6 +34,7 @@ public:
 	virtual ~FLiveLinkRTTrPM_Source();
 	// Inherited via ILiveLinkSource
 	void ReceiveClient(ILiveLinkClient* InClient, FGuid InSourceGuid) override;
+	virtual void OnSettingsChanged(ULiveLinkSourceSettings* Settings, const FPropertyChangedEvent& PropertyChangedEvent) override;
 	bool IsSourceStillValid() const override;
 	bool RequestSourceShutdown() override;
 	FText GetSourceType() const override;

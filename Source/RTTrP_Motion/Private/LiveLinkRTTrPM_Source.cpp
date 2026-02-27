@@ -70,6 +70,18 @@ void FLiveLinkRTTrPM_Source::ReceiveClient(ILiveLinkClient* InClient, FGuid InSo
     SourceGuid = InSourceGuid;
 }
 
+void FLiveLinkRTTrPM_Source::OnSettingsChanged(ULiveLinkSourceSettings* Settings, const FPropertyChangedEvent& PropertyChangedEvent)
+{
+    ILiveLinkSource::OnSettingsChanged(Settings, PropertyChangedEvent);
+
+    const FProperty* const MemberProperty = PropertyChangedEvent.MemberProperty;
+    const FProperty* const Property = PropertyChangedEvent.Property;
+    if (Property && MemberProperty && (PropertyChangedEvent.ChangeType != EPropertyChangeType::Interactive))
+    {
+        bResetRequested = true;
+    }
+}
+
 bool FLiveLinkRTTrPM_Source::IsSourceStillValid() const
 {
     return ConnectionState == ELiveLinkRTTrPMState::Receiving;
