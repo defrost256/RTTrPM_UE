@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Serialization/ArrayReader.h"
 
-#include "UdpSocketReceiver.h"
+#include "Common/UdpSocketReceiver.h"
 #include "lib/thirdParty_motion.h"
 #include "lib/RTTrP.h"
 
@@ -15,8 +15,8 @@ DECLARE_LOG_CATEGORY_EXTERN(LogRTTrP, Log, All);
 
 #define RTTrP_INT_LE 0x5441
 #define RTTrP_INT_BE 0x4154
-#define RTTrP_FLT_LE 0x3443
-#define RTTrP_FLT_BE 0x4334
+#define RTTrPM_FLT_LE 0x3443
+#define RTTrPM_FLT_BE 0x4334
 #define RTTrP_Version 0x0002
 
 enum RTTrP_PacketType: uint8_t {
@@ -31,8 +31,16 @@ enum RTTrP_PacketType: uint8_t {
 	Centroid_AccVel = 0x20,
 	LED_AccVel = 0x21,
 	Zone = 0x22,
-	Trackable_TS = 0x51,
+	Trackable_TS = 0x51
+};
 
+enum RTTrPM_EulerOrder : uint16_t {
+	XYZ = 0x0123,
+	XZY = 0x0132,
+	YXZ = 0x0213,
+	YZX = 0x0231,
+	ZXY = 0x0312,
+	ZYX = 0x0321
 };
 
 USTRUCT(BlueprintType)
@@ -198,6 +206,10 @@ struct RTTrPM_LED {
 
 	void Update(FArrayReader& data, uint8_t pkType, uint16_t intSig, uint16_t fltSig);
 	void Update(RTTrPM_LED& other);
+
+	FVector GetPosition() const {
+		return FVector(x * 100.0, y * -100.0, z * 100.0);
+	}
 };
 
 struct RTTrPM_Orientation {
@@ -222,6 +234,21 @@ struct RTTrPM_Trackable {
 	TArray<FString> zones;
 
 	RTTrPM_Trackable(FArrayReader& data, uint16_t intSig, uint16_t fltSig);
+
+	FTransform GetTransform() const{
+		FTransform transform = FTransform::Identity;
+		transform.SetLocation(FVector(
+			centroid.x * 100.0,
+			centroid.y * -100.0,
+			centroid.z * 100.0));
+		transform.SetRotation(FQuat(
+			orientation.Qx,
+			orientation.Qy,
+			orientation.Qz,
+			orientation.Qw));
+		return transform;
+	}
+
 };
 
 

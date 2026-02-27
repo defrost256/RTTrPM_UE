@@ -72,6 +72,7 @@ RTTrPM_Trackable::RTTrPM_Trackable(FArrayReader& data, uint16_t intSig, uint16_t
 			break;
 		case RTTrP_PacketType::LED_Pos: // LED Module
 		case RTTrP_PacketType::LED_AccVel: // LED AccVel Module
+		{
 			RTTrPM_LED newLed;
 			newLed.Update(data, pkType, intSig, fltSig);
 			if (LEDs.Contains(newLed.index)) {
@@ -80,6 +81,7 @@ RTTrPM_Trackable::RTTrPM_Trackable(FArrayReader& data, uint16_t intSig, uint16_t
 			else {
 				LEDs[newLed.index] = newLed;
 			}
+		}
 			break;
 		case RTTrP_PacketType::Zone: // Zone module
 			uint16_t zoneModSize;
@@ -93,7 +95,7 @@ RTTrPM_Trackable::RTTrPM_Trackable(FArrayReader& data, uint16_t intSig, uint16_t
 				data << zoneSubmodSize;
 				data << zoneNameLength;
 
-				ANSICHAR* nameBytes = new ANSICHAR[zoneNameLength + 1];
+				nameBytes = new ANSICHAR[zoneNameLength + 1];
 				data.Serialize(nameBytes, zoneNameLength);
 				nameBytes[zoneNameLength] = 0; // Null termination TODO: is this neccessary?
 				zones.Add(FString(nameBytes));
@@ -105,16 +107,16 @@ RTTrPM_Trackable::RTTrPM_Trackable(FArrayReader& data, uint16_t intSig, uint16_t
 	}
 }
 
-void RTTrPM_Centroid::Update(FArrayReader& data, uint8_t pkType, uint16_t intSig, uint16_t fltSig)
+void RTTrPM_Centroid::Update(FArrayReader& data, uint8_t _pkType, uint16_t intSig, uint16_t fltSig)
 {
-	this->pkType = pkType;
+	this->pkType = _pkType;
 	data << size;
-	if (pkType == RTTrP_PacketType::Centroid_Pos)
+	if (_pkType == RTTrP_PacketType::Centroid_Pos)
 		data << latency;
 	data << x;
 	data << y;
 	data << z;
-	if (fltSig == RTTrP_FLT_BE) { //swap
+	if (fltSig == RTTrPM_FLT_BE) { //swap
 		x = BYTESWAP_ORDERD(x);
 		y = BYTESWAP_ORDERD(y);
 		z = BYTESWAP_ORDERD(z);
@@ -122,14 +124,14 @@ void RTTrPM_Centroid::Update(FArrayReader& data, uint8_t pkType, uint16_t intSig
 	if (intSig == RTTrP_INT_BE) {
 		size = BYTESWAP_ORDER16(size);
 	}
-	if (pkType == RTTrP_PacketType::Centroid_AccVel) {
+	if (_pkType == RTTrP_PacketType::Centroid_AccVel) {
 		data << accx;
 		data << accy;
 		data << accz;
 		data << velx;
 		data << vely;
 		data << velz;
-		if (fltSig == RTTrP_FLT_BE) {
+		if (fltSig == RTTrPM_FLT_BE) {
 			accx = BYTESWAP_ORDERF(accx);
 			accy = BYTESWAP_ORDERF(accy);
 			accz = BYTESWAP_ORDERF(accz);
@@ -140,16 +142,16 @@ void RTTrPM_Centroid::Update(FArrayReader& data, uint8_t pkType, uint16_t intSig
 	}
 }
 
-void RTTrPM_LED::Update(FArrayReader& data, uint8_t pkType, uint16_t intSig, uint16_t fltSig)
+void RTTrPM_LED::Update(FArrayReader& data, uint8_t _pkType, uint16_t intSig, uint16_t fltSig)
 {
-	this->pkType = pkType;
+	this->pkType = _pkType;
 	data << size;
-	if (pkType == RTTrP_PacketType::LED_Pos)
+	if (_pkType == RTTrP_PacketType::LED_Pos)
 		data << latency;
 	data << x;
 	data << y;
 	data << z;
-	if (fltSig == RTTrP_FLT_BE) { //swap
+	if (fltSig == RTTrPM_FLT_BE) { //swap
 		x = BYTESWAP_ORDERD(x);
 		y = BYTESWAP_ORDERD(y);
 		z = BYTESWAP_ORDERD(z);
@@ -157,14 +159,14 @@ void RTTrPM_LED::Update(FArrayReader& data, uint8_t pkType, uint16_t intSig, uin
 	if (intSig == RTTrP_INT_BE) {
 		size = BYTESWAP_ORDER16(size);
 	}
-	if (pkType == RTTrP_PacketType::LED_AccVel) {
+	if (_pkType == RTTrP_PacketType::LED_AccVel) {
 		data << accx;
 		data << accy;
 		data << accz;
 		data << velx;
 		data << vely;
 		data << velz;
-		if (fltSig == RTTrP_FLT_BE) {
+		if (fltSig == RTTrPM_FLT_BE) {
 			accx = BYTESWAP_ORDERF(accx);
 			accy = BYTESWAP_ORDERF(accy);
 			accz = BYTESWAP_ORDERF(accz);
@@ -197,23 +199,23 @@ void RTTrPM_LED::Update(RTTrPM_LED& other)
 	}
 }
 
-void RTTrPM_Orientation::Update(FArrayReader& data, uint8_t pkType, uint16_t intSig, uint16_t fltSig)
+void RTTrPM_Orientation::Update(FArrayReader& data, uint8_t _pkType, uint16_t intSig, uint16_t fltSig)
 {
-	this->pkType = pkType;
+	this->pkType = _pkType;
 	data << size;
 	data << latency;
 	if (intSig == RTTrP_INT_BE) {
 		size = BYTESWAP_ORDER16(size);
 		latency = BYTESWAP_ORDER16(latency);
 	}
-	if (pkType == RTTrP_PacketType::Orientation_Euler) {
+	if (_pkType == RTTrP_PacketType::Orientation_Euler) {
 		data << eulerOrder;
 		if (intSig == RTTrP_INT_BE)
 			eulerOrder = BYTESWAP_ORDER16(eulerOrder);
 		data << R1;
 		data << R2;
 		data << R3;
-		if (fltSig == RTTrP_FLT_BE) {
+		if (fltSig == RTTrPM_FLT_BE) {
 			R1 = BYTESWAP_ORDERD(R1);
 			R2 = BYTESWAP_ORDERD(R2);
 			R3 = BYTESWAP_ORDERD(R3);
@@ -223,13 +225,14 @@ void RTTrPM_Orientation::Update(FArrayReader& data, uint8_t pkType, uint16_t int
 		R2 *= rad2deg;
 		R3 *= rad2deg;
 		//TODO: Update quaternions based on order
+		
 	}
 	else {
 		data << Qx;
 		data << Qy;
 		data << Qz;
 		data << Qw;
-		if (fltSig == RTTrP_FLT_BE) {
+		if (fltSig == RTTrPM_FLT_BE) {
 			Qx = BYTESWAP_ORDERD(Qx);
 			Qy = BYTESWAP_ORDERD(Qy);
 			Qz = BYTESWAP_ORDERD(Qz);

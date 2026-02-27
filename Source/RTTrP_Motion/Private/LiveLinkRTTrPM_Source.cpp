@@ -320,69 +320,12 @@ bool FLiveLinkRTTrPM_Source::JoinMulticastGroup(const FIPv4Address& UnicastAddre
 void FLiveLinkRTTrPM_Source::OnPacketReceived(const FArrayReaderPtr& Data, const FIPv4Endpoint& Endpoint) {
     LastDataReadTime = FPlatformTime::Seconds();
 
-    std::vector<UCHAR> dataVec(Data->GetData(), Data->GetData() + Data->NumBytes());
-    RTTrP header(dataVec);
-    if (header.fltHeader == 0x4334 || header.fltHeader == 0x3443) //RTTrPM
+    RTTrP_Header header(Data.ToSharedRef().Get());
+    if (header.fltSig == RTTrPM_FLT_BE || header.fltSig == RTTrPM_FLT_LE) //RTTrPM
     {
-        dataVec = header.data; // Remaining data after header
         for (int trackableIndex = 0; trackableIndex < header.numMods; trackableIndex++) {
-            RTTrPM motionPacket;
-            motionPacket.header = &header;
-            motionPacket.trackable = new Trackable(&dataVec, header.intHeader, header.fltHeader);
-            for (int modIndex = 0; modIndex < motionPacket.trackable->numMods; modIndex++) {
-                uint8_t pkType = dataVec[0];
-                motionPacket.pkType.push_back(pkType);
-                switch (pkType) {
-                case 0x02: // Centroid Module
-                    motionPacket.centroidMod = new CentroidMod(&dataVec, header.intHeader, header.fltHeader);
-                    break;
-                case 0x03: // Quaternion Module
-                    motionPacket.quatMod = new QuatModule(&dataVec, header.intHeader, header.fltHeader);
-                    break;
-                case 0x04: // Euler Module
-                    motionPacket.eulerMod = new EulerModule(&dataVec, header.intHeader, header.fltHeader);
-                    break;
-                case 0x06: // LED Module
-                {
-                    if (motionPacket.ledMod == nullptr) {
-                        motionPacket.ledMod = new std::vector<LEDModule*>();
-                    }
-                    LEDModule* ledModule = new LEDModule(&dataVec, header.intHeader, header.fltHeader);
-                    motionPacket.ledMod->push_back(ledModule);
-                    break;
-                }
-                case 0x20: // Centroid AccVel Module
-                    motionPacket.cavMod = new CentroidAccVelMod(&dataVec, header.intHeader, header.fltHeader);
-                    break;
-                case 0x21: // LED AccVel Module
-                {
-                    if (motionPacket.lavMod == nullptr) {
-                        motionPacket.lavMod = new std::vector<LEDAccVelMod*>();
-                    }
-                    LEDAccVelMod* lavModule = new LEDAccVelMod(&dataVec, header.intHeader, header.fltHeader);
-                    motionPacket.lavMod->push_back(lavModule);
-                    break;
-                }
-                case 0x22: // Zone module
-                {
-                    ZoneMod* zoneMod = new ZoneMod(&dataVec, header.intHeader, header.fltHeader);
-                    if (motionPacket.zoneSubMod == nullptr && zoneMod->numofZoneSubModules > 0) {
-                        motionPacket.zoneSubMod = new std::vector<ZoneSubMod*>();
-                        for (int zoneModeIdx = 0; zoneModeIdx < zoneMod->numofZoneSubModules; zoneModeIdx++) {
-                            ZoneSubMod* subMod = new ZoneSubMod(&dataVec, header.intHeader);
-                            motionPacket.zoneSubMod->push_back(subMod);
-                        }
-                    }
-                    motionPacket.zoneMod = zoneMod;
-                    break;
-                }
-                default:
-                    UE_LOG(LogRTTrP, Warning, TEXT("LiveLinkRTTrPM_Source: Unknown module type: 0x%02X"), pkType);
-                    return;
-                }
-            }
 
-            FRTTrPM_Trackable trackable(motionPacket);
+			RTTrPM_Trackable trackable(Data.ToSharedRef().Get(), header.intSig, header.fltSig);
             SendTrackable(trackable);
         }
     }
@@ -443,5 +386,63 @@ void FLiveLinkRTTrPM_Source::SendTrackable(const FRTTrPM_Trackable& Trackable)
         break;
     }
     TransformFrameData->Zones.Append(Trackable.ActiveZones);
+    Client->PushSubjectFrameData_AnyThread({ SourceGuid, SubjectName }, MoveTemp(FrameData));
+}
+
+void FLiveLinkRTTrPM_Source::SendTrackable(const RTTrPM_Trackable& Trackable)
+{
+    if (Client == nullptr) {
+        return;
+    }
+
+    FName SubjectName = FName(*Trackable.name);
+
+    if (!EncounteredSubjects.Contains(SubjectName)) {
+        // Transform role static data
+        FLiveLinkStaticDataStruct StaticData(FLiveLinkRTTrPM_StaticData::StaticStruct());
+        Client->PushSubjectStaticData_AnyThread({ SourceGuid, SubjectName }, ULiveLinkRTTrPM_Role::StaticClass(), MoveTemp(StaticData));
+        EncounteredSubjects.Add(SubjectName);
+    }
+
+    FLiveLinkFrameDataStruct FrameData(FLiveLinkRTTrPM_FrameData::StaticStruct());
+    FLiveLinkRTTrPM_FrameData* TransformFrameData = FrameData.Cast<FLiveLinkRTTrPM_FrameData>();
+    //Update transform position based on Source settings
+    TransformFrameData->Transform = Trackable.GetTransform();
+    TransformFrameData->CentroidPosition = Trackable.GetTransform().GetLocation();
+    for (const TTuple<uint8_t, RTTrPM_LED>& led : Trackable.LEDs) {
+        switch (led.Key) {
+        case 0:
+            TransformFrameData->LED1Position = led.Value.GetPosition();
+            break;
+        case 1:
+            TransformFrameData->LED2Position = led.Value.GetPosition();
+            break;
+        case 2:
+            TransformFrameData->LED3Position = led.Value.GetPosition();
+            break;
+        default:
+            break;
+        }
+    }
+    const ERTTrPM_SubjectType TransformSource = (mSettings != nullptr)
+        ? mSettings->TransformSource
+        : ERTTrPM_SubjectType::Centroid;
+
+    switch (TransformSource) {
+    case ERTTrPM_SubjectType::Centroid:
+        break;
+    case ERTTrPM_SubjectType::LED1:
+        TransformFrameData->Transform.SetLocation(TransformFrameData->LED1Position);
+        break;
+    case ERTTrPM_SubjectType::LED2:
+        TransformFrameData->Transform.SetLocation(TransformFrameData->LED2Position);
+        break;
+    case ERTTrPM_SubjectType::LED3:
+        TransformFrameData->Transform.SetLocation(TransformFrameData->LED3Position);
+        break;
+    default:
+        break;
+    }
+    TransformFrameData->Zones.Append(Trackable.zones);
     Client->PushSubjectFrameData_AnyThread({ SourceGuid, SubjectName }, MoveTemp(FrameData));
 }

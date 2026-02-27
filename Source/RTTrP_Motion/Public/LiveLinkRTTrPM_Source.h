@@ -71,6 +71,7 @@ public:
 	TSet<FName> EncounteredSubjects;
 
 	void SendTrackable(const FRTTrPM_Trackable& Trackable);
+	void SendTrackable(const RTTrPM_Trackable& Trackable);
 
 private:
 	bool OpenSocket();
