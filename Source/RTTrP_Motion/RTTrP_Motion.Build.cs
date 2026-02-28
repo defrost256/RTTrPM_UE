@@ -30,7 +30,8 @@ public class RTTrP_Motion : ModuleRules
 				"Sockets",
                 "LiveLinkInterface",
 				"DeveloperSettings",
-				"AnimationCore"
+				"AnimationCore",
+				"LiveLinkComponents"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

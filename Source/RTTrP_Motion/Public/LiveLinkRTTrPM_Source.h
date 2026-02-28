@@ -12,7 +12,7 @@
 
 #include "RTTrP_types.h"
 #include "LiveLinkRTTrPM_Connection.h"
-#include "LiveLinkRTTrPM_SourceSettings.h"
+//#include "LiveLinkRTTrPM_SourceSettings.h"
 
 class FUdpSocketReceiver;
 class FSocket;
@@ -40,9 +40,9 @@ public:
 	FText GetSourceType() const override;
 	FText GetSourceMachineName() const override;
 	FText GetSourceStatus() const override;
-	virtual void InitializeSettings(ULiveLinkSourceSettings* Settings) override;
+	//virtual void InitializeSettings(ULiveLinkSourceSettings* Settings) override;
 	virtual void Update() override;
-	virtual TSubclassOf<ULiveLinkSourceSettings> GetSettingsClass() const override { return ULiveLinkRTTrPM_SourceSettings::StaticClass(); }
+	//virtual TSubclassOf<ULiveLinkSourceSettings> GetSettingsClass() const override { return ULiveLinkRTTrPM_SourceSettings::StaticClass(); }
 	// End ILiveLinkSource Interface
 
 	// LiveLink client
@@ -65,12 +65,11 @@ public:
 
 	// Connection settings
 	FLiveLinkRTTrPM_ConnectionSettings ConnectionSettings;
-	ULiveLinkRTTrPM_SourceSettings* mSettings = nullptr;
+	//ULiveLinkRTTrPM_SourceSettings* mSettings = nullptr;
 
 	// Track subjects we've registered
 	TSet<FName> EncounteredSubjects;
 
-	void SendTrackable(const FRTTrPM_Trackable& Trackable);
 	void SendTrackable(const RTTrPM_Trackable& Trackable);
 
 private:

@@ -115,14 +115,10 @@ FText FLiveLinkRTTrPM_Source::GetSourceStatus() const
     return SourceStatus;
 }
 
-void FLiveLinkRTTrPM_Source::InitializeSettings(ULiveLinkSourceSettings* Settings)
-{
-    mSettings = Cast<ULiveLinkRTTrPM_SourceSettings>(Settings);
-    if (mSettings != nullptr)
-    {
-        mSettings->TransformSource = ERTTrPM_SubjectType::Centroid;
-    }
-}
+//void FLiveLinkRTTrPM_Source::InitializeSettings(ULiveLinkSourceSettings* Settings)
+//{
+//
+//}
 
 void FLiveLinkRTTrPM_Source::Update()
 {
@@ -318,8 +314,10 @@ bool FLiveLinkRTTrPM_Source::JoinMulticastGroup(const FIPv4Address& UnicastAddre
 }
 
 void FLiveLinkRTTrPM_Source::OnPacketReceived(const FArrayReaderPtr& Data, const FIPv4Endpoint& Endpoint) {
+    
+    TRACE_CPUPROFILER_EVENT_SCOPE(RTTrPM::DataPacket);
+    
     LastDataReadTime = FPlatformTime::Seconds();
-
     RTTrP_Header header(Data.ToSharedRef().Get());
     if (header.fltSig == RTTrPM_FLT_BE || header.fltSig == RTTrPM_FLT_LE) //RTTrPM
     {
@@ -329,64 +327,6 @@ void FLiveLinkRTTrPM_Source::OnPacketReceived(const FArrayReaderPtr& Data, const
             SendTrackable(trackable);
         }
     }
-}
-
-void FLiveLinkRTTrPM_Source::SendTrackable(const FRTTrPM_Trackable& Trackable)
-{
-    if (Client == nullptr) {
-        return;
-    }
-
-    FName SubjectName = FName(*Trackable.Name);
-
-    if (!EncounteredSubjects.Contains(SubjectName)) {
-        // Transform role static data
-        FLiveLinkStaticDataStruct StaticData(FLiveLinkRTTrPM_StaticData::StaticStruct());
-        Client->PushSubjectStaticData_AnyThread({ SourceGuid, SubjectName }, ULiveLinkRTTrPM_Role::StaticClass(), MoveTemp(StaticData));
-        EncounteredSubjects.Add(SubjectName);
-    }
-
-    FLiveLinkFrameDataStruct FrameData(FLiveLinkRTTrPM_FrameData::StaticStruct());
-    FLiveLinkRTTrPM_FrameData* TransformFrameData = FrameData.Cast<FLiveLinkRTTrPM_FrameData>();
-    //Update transform position based on Source settings
-    TransformFrameData->Transform = Trackable.Transform;
-    TransformFrameData->CentroidPosition = Trackable.Transform.GetLocation();
-    for (const FRTTrPM_LED& led : Trackable.LEDs) {
-        switch (led.Index) {
-        case 0:
-            TransformFrameData->LED1Position = led.Position;
-            break;
-        case 1:
-            TransformFrameData->LED2Position = led.Position;
-            break;
-        case 2:
-            TransformFrameData->LED3Position = led.Position;
-            break;
-        default:
-            break;
-        }
-    }
-    const ERTTrPM_SubjectType TransformSource = (mSettings != nullptr)
-        ? mSettings->TransformSource
-        : ERTTrPM_SubjectType::Centroid;
-
-    switch (TransformSource) {
-    case ERTTrPM_SubjectType::Centroid:
-        break;
-    case ERTTrPM_SubjectType::LED1:
-        TransformFrameData->Transform.SetLocation(TransformFrameData->LED1Position);
-        break;
-    case ERTTrPM_SubjectType::LED2:
-        TransformFrameData->Transform.SetLocation(TransformFrameData->LED2Position);
-        break;
-    case ERTTrPM_SubjectType::LED3:
-        TransformFrameData->Transform.SetLocation(TransformFrameData->LED3Position);
-        break;
-    default:
-        break;
-    }
-    TransformFrameData->Zones.Append(Trackable.ActiveZones);
-    Client->PushSubjectFrameData_AnyThread({ SourceGuid, SubjectName }, MoveTemp(FrameData));
 }
 
 void FLiveLinkRTTrPM_Source::SendTrackable(const RTTrPM_Trackable& Trackable)
@@ -424,25 +364,7 @@ void FLiveLinkRTTrPM_Source::SendTrackable(const RTTrPM_Trackable& Trackable)
             break;
         }
     }
-    const ERTTrPM_SubjectType TransformSource = (mSettings != nullptr)
-        ? mSettings->TransformSource
-        : ERTTrPM_SubjectType::Centroid;
 
-    switch (TransformSource) {
-    case ERTTrPM_SubjectType::Centroid:
-        break;
-    case ERTTrPM_SubjectType::LED1:
-        TransformFrameData->Transform.SetLocation(TransformFrameData->LED1Position);
-        break;
-    case ERTTrPM_SubjectType::LED2:
-        TransformFrameData->Transform.SetLocation(TransformFrameData->LED2Position);
-        break;
-    case ERTTrPM_SubjectType::LED3:
-        TransformFrameData->Transform.SetLocation(TransformFrameData->LED3Position);
-        break;
-    default:
-        break;
-    }
     TransformFrameData->Zones.Append(Trackable.zones);
     Client->PushSubjectFrameData_AnyThread({ SourceGuid, SubjectName }, MoveTemp(FrameData));
 }
