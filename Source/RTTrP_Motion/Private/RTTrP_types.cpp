@@ -5,7 +5,7 @@
 
 DEFINE_LOG_CATEGORY(LogRTTrP);
 
-//TODO: Replace Byteswap order with INTEL_ORDER / NETWORK_ORDER for platform agnostic behaviour
+//TODO: Replace Byteswap orderEnum with INTEL_ORDER / NETWORK_ORDER for platform agnostic behaviour
 //TODO: handle byteswap through FArchive byteorder?
 
 RTTrP_Header::RTTrP_Header(FArrayReader& data)
@@ -31,14 +31,10 @@ RTTrP_Header::RTTrP_Header(FArrayReader& data)
 	}
 }
 
-FRTTrPM_Trackable::FRTTrPM_Trackable(FArrayReaderPtr data)
-{
-
-}
-
 RTTrPM_Trackable::RTTrPM_Trackable(FArrayReader& data, uint16_t intSig, uint16_t fltSig)
 {
 	data << pkType;
+	data << size;
 	data << nameLen;
 
 	ANSICHAR* nameBytes = new ANSICHAR[nameLen + 1];
@@ -74,12 +70,12 @@ RTTrPM_Trackable::RTTrPM_Trackable(FArrayReader& data, uint16_t intSig, uint16_t
 		case RTTrP_PacketType::LED_AccVel: // LED AccVel Module
 		{
 			RTTrPM_LED newLed;
-			newLed.Update(data, pkType, intSig, fltSig);
+			newLed.Update(data, modType, intSig, fltSig);
 			if (LEDs.Contains(newLed.index)) {
 				LEDs[newLed.index].Update(newLed);
 			}
 			else {
-				LEDs[newLed.index] = newLed;
+				LEDs.Add(newLed.index, newLed);
 			}
 		}
 			break;
@@ -224,8 +220,14 @@ void RTTrPM_Orientation::Update(FArrayReader& data, uint8_t _pkType, uint16_t in
 		R1 *= rad2deg;
 		R2 *= rad2deg;
 		R3 *= rad2deg;
-		//TODO: Update quaternions based on order
-		
+
+		//Update quaternion values based on euler angles
+		RTTrPM_EulerOrder orderEnum = (RTTrPM_EulerOrder)eulerOrder;
+		FQuat calculatedQuat = AnimationCore::QuatFromEuler(FVector(R1, R2, R3), ConvertEulerOrder(orderEnum), true);
+		Qx = calculatedQuat.X;
+		Qy = calculatedQuat.Y;
+		Qz = calculatedQuat.Z;
+		Qw = calculatedQuat.W;
 	}
 	else {
 		data << Qx;
@@ -238,5 +240,13 @@ void RTTrPM_Orientation::Update(FArrayReader& data, uint8_t _pkType, uint16_t in
 			Qz = BYTESWAP_ORDERD(Qz);
 			Qw = BYTESWAP_ORDERD(Qw);
 		}
+
+		//Update euler angles based on quaternion values
+		FQuat quat = FQuat(Qx, Qy, Qz, Qw);
+		FRotator rotator = quat.Rotator();
+		R1 = rotator.Roll;
+		R2 = rotator.Pitch;
+		R3 = rotator.Yaw;
+		eulerOrder = (uint16_t)RTTrPM_EulerOrder::ZYX; //Default Unreal rotation order ZYX
 	}
 }

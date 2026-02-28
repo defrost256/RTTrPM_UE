@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Serialization/ArrayReader.h"
-
 #include "Common/UdpSocketReceiver.h"
+#include "AnimationCoreLibrary.h"
+
 #include "lib/thirdParty_motion.h"
 #include "lib/RTTrP.h"
 
@@ -42,6 +43,18 @@ enum RTTrPM_EulerOrder : uint16_t {
 	ZXY = 0x0312,
 	ZYX = 0x0321
 };
+static const TMap<RTTrPM_EulerOrder, EEulerRotationOrder> EulerOrderMap = {
+	{RTTrPM_EulerOrder::XYZ, EEulerRotationOrder::XYZ},
+	{RTTrPM_EulerOrder::XZY, EEulerRotationOrder::XZY},
+	{RTTrPM_EulerOrder::YXZ, EEulerRotationOrder::YXZ},
+	{RTTrPM_EulerOrder::YZX, EEulerRotationOrder::YZX},
+	{RTTrPM_EulerOrder::ZXY, EEulerRotationOrder::ZXY},
+	{RTTrPM_EulerOrder::ZYX, EEulerRotationOrder::ZYX}
+};
+
+static const EEulerRotationOrder& ConvertEulerOrder(RTTrPM_EulerOrder order) {
+	return EulerOrderMap[order];
+}
 
 USTRUCT(BlueprintType)
 struct FRTTrPM_LED {
@@ -117,8 +130,6 @@ public:
 			ActiveZones.Add(zone);
 		}
 	}
-
-	FRTTrPM_Trackable(FArrayReaderPtr data);
 
 	FRTTrPM_Trackable(const RTTrPM& motionPacket) {
 		Name = FString(motionPacket.trackable->name.c_str());
@@ -250,7 +261,5 @@ struct RTTrPM_Trackable {
 	}
 
 };
-
-
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRTTrPTrackableReceived, FRTTrPM_Trackable, trackable);
